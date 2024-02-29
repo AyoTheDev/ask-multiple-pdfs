@@ -6,7 +6,9 @@ The executive summary should have:
 - 1 short paragraph (2 sentences) that explains if they are a good match to the job spec
 - 3-4 bullet points on key skills and experience related to the job spec
 - If available, when they can start the job from, salary expectations, and location/timezone
-The executive summary must be limited to 200 words
+
+IT IS CRITICAL THAT YOU GENERATE CONCISE PARAGRAPHS, NO MORE THAN 50 WORDS PER PARAGRAPH.
+
 Review the given Resume here:
 
 {resume}
