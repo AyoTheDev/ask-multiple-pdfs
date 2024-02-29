@@ -74,7 +74,7 @@ def test():
 def main():
     load_dotenv()
 
-    gpt4 = ChatOpenAI(model_name='gpt-4-0125-preview')
+    gpt4 = ChatOpenAI(model_name='gpt-3.5-turbo-0125')
     prompt = PromptTemplate(template=prompt_template, input_variables=["resume", "job_spec"])
     llm_chain = LLMChain(
         prompt=prompt,
