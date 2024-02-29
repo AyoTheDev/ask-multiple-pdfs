@@ -1,6 +1,7 @@
 import streamlit as st
 from dotenv import load_dotenv
 from PyPDF2 import PdfReader
+from langchain import PromptTemplate, LLMChain
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.embeddings import OpenAIEmbeddings, HuggingFaceInstructEmbeddings
 from langchain.vectorstores import FAISS
@@ -9,6 +10,9 @@ from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
 from htmlTemplates import css, bot_template, user_template
 from langchain.llms import HuggingFaceHub
+
+from prompts import prompt_template
+
 
 def get_pdf_text(pdf_docs):
     text = ""
@@ -46,7 +50,9 @@ def get_conversation_chain(vectorstore):
     conversation_chain = ConversationalRetrievalChain.from_llm(
         llm=llm,
         retriever=vectorstore.as_retriever(),
-        memory=memory
+        memory=memory,
+        condense_question_prompt=prompt_template
+
     )
     return conversation_chain
 
@@ -63,42 +69,42 @@ def handle_userinput(user_question):
             st.write(bot_template.replace(
                 "{{MSG}}", message.content), unsafe_allow_html=True)
 
-
+def test():
+    st.write("where does this appear?")
 def main():
     load_dotenv()
+
+    gpt4 = ChatOpenAI(model_name='gpt-4-0613')
+    prompt = PromptTemplate(template=prompt_template, input_variables=["resume", "job_spec"])
+    llm_chain = LLMChain(
+        prompt=prompt,
+        llm=gpt4
+    )
     st.set_page_config(page_title="Chat with multiple PDFs",
                        page_icon=":books:")
     st.write(css, unsafe_allow_html=True)
-
     if "conversation" not in st.session_state:
         st.session_state.conversation = None
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = None
 
-    st.header("Chat with multiple PDFs :books:")
-    user_question = st.text_input("Ask a question about your documents:")
-    if user_question:
-        handle_userinput(user_question)
-
+    st.header("Executive Summary Generator")
+    response=""
     with st.sidebar:
         st.subheader("Your documents")
-        pdf_docs = st.file_uploader(
-            "Upload your PDFs here and click on 'Process'", accept_multiple_files=True)
+        cv_doc = st.file_uploader(
+            "Upload candidate profile", accept_multiple_files=True)
+
+        job_spec_doc = st.file_uploader(
+            "Upload job specification", accept_multiple_files=True)
+
         if st.button("Process"):
             with st.spinner("Processing"):
-                # get pdf text
-                raw_text = get_pdf_text(pdf_docs)
+                cv_raw_text = get_pdf_text(cv_doc)
+                job_spec_text = get_pdf_text(job_spec_doc)
+                response = llm_chain.run({'resume': cv_raw_text, 'job_spec': job_spec_text})
 
-                # get the text chunks
-                text_chunks = get_text_chunks(raw_text)
-
-                # create vector store
-                vectorstore = get_vectorstore(text_chunks)
-
-                # create conversation chain
-                st.session_state.conversation = get_conversation_chain(
-                    vectorstore)
-
+    st.write(response)
 
 if __name__ == '__main__':
     main()
